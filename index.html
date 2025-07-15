@@ -26,11 +26,7 @@
     box-shadow: 0 0 4px rgba(0,0,0,0.3);
   }
 
-  .logo-container img {
-    display: block;
-    max-width: 100px;
-    height: auto;
-  }
+
   </style>
 </head>
 <body>
@@ -102,7 +98,7 @@
           }
         });
         overlayLayers[label] = layer;
-        if (label === "Strathcona County AQHI") {
+        if (label === "PAS AQHI") {
           layer.addTo(map);  // Only Strathcona County shows initially
         }
       })
@@ -155,14 +151,7 @@
   };
   legend.addTo(map);
 
-
-  const logo = L.control({ position: 'bottomright' });
-  logo.onAdd = function () {
-    const div = L.DomUtil.create('div', 'logo-container');
-    div.innerHTML = `<img src="ACA_LOGO_CMYK.png" alt="Logo">`; 
-    return div;
   };
-  logo.addTo(map);
 
   
   // Auto-refresh every 60 minutes
