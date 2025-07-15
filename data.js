@@ -133,6 +133,11 @@ const shortformOverride = {
         const label = shortformOverride[p] || r.Shortform || p;
         const value = r.Value;
         const unit = r.Units || "";
+
+        if (p === "AQHI" && !isNaN(value)) {
+          value = (parseFloat(value) > 10) ? "10+" : value;
+        }
+        
         return `${label}: ${value}${unit}`;
       });
 
