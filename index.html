@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AQHI Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+    .legend {
+      background: white;
+      padding: 10px;
+      line-height: 1.5;
+    }
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.7;
+    }
+    .logo-container {
+    background: white;
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+  }
+
+  .logo-container img {
+    display: block;
+    max-width: 100px;
+    height: auto;
+  }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+  
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="data.js"></script> 
+   
+<script>
+  const map = L.map('map').setView([53.62, -113.09], 10);
+  let layerControl;
+
+  // Base layers
+  const baseLayers = {
+    "Streets": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map),
+    "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      attribution: 'Tiles © Esri'
+    })
+  };
+
+  // Color by AQHI value
+  function getColor(aqhi) {
+    return {
+      "1": "#01cbff",
+      "2": "#0099cb",
+      "3": "#016797",
+      "4": "#fffe03",
+      "5": "#ffcb00",
+      "6": "#ff9835",
+      "7": "#fd6866",
+      "8": "#fe0002",
+      "9": "#cc0001",
+      "10": "#9a0100",
+      "10+": "#640100"
+    }[aqhi] || "#D3D3D3";
+  }
+
+  function style(feature) {
+    return {
+      fillColor: getColor(feature.properties.value),
+      weight: 0.5,
+      opacity: 0.6,
+      color: 'white',
+      fillOpacity: 0.5
+    };
+  }
+
+  const overlayLayers = {};
+  const markerGroup = L.layerGroup(); 
+  overlayLayers["Stations"] = markerGroup;
+  const layersInfo = {
+    "Alberta AQHI": "https://raw.githubusercontent.com/DKevinM/AQHI.forecast/main/output/AQHI_Alberta.geojson",
+    "PAS AQHI": "https://raw.githubusercontent.com/DKevinM/AQHI.forecast/main/output/AQHI_PAS_2025.geojson"
+  };
+
+ // Load all AQHI GeoJSONs
+  Promise.all(Object.entries(layersInfo).map(([label, file]) =>
+    fetch(file)
+      .then(resp => resp.json())
+      .then(data => {
+        const timestamp = data.features[0]?.properties?.timestamp || label;
+        const layer = L.geoJson(data, {
+          style: style,
+          onEachFeature: (feature, layer) => {
+            layer.bindPopup(`AQHI @ ${timestamp}<br><b>AQHI:</b> ${feature.properties.value}`);
+          }
+        });
+        overlayLayers[label] = layer;
+        if (label === "Strathcona County AQHI") {
+          layer.addTo(map);  // Only Strathcona County shows initially
+        }
+      })
+  )).then(() => {
+    // Weather layers
+    const weatherLayers = {
+      "Radar": L.tileLayer.wms("https://geo.weather.gc.ca/geomet/?lang=en", {
+        layers: "RADAR_1KM_RRAI",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.85
+      }),
+      "Winds": L.tileLayer.wms("https://geo.weather.gc.ca/geomet/?lang=en", {
+        layers: "HRDPS.CONTINENTAL_UU",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.7
+      }),
+      "Lightning": L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+        layers: "Lightning_2.5km_Density",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.85
+      }),
+      "Thunderstorm": L.tileLayer.wms("https://geo.weather.gc.ca/geomet", {
+        layers: "GDPS-WEonG_15km_Thunderstorm-Prob.3h",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.75
+      })
+    };
+
+    // Merge AQHI and weather layers
+    const allOverlayLayers = { ...overlayLayers, ...weatherLayers };
+
+    // Single layer control (don't repeat inside loop!)
+    layerControl = L.control.layers(baseLayers, allOverlayLayers).addTo(map);
+  });
+
+ 
+  // Add legend
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legend');
+    const grades = ["1","2","3","4","5","6","7","8","9","10","10+"];
+    grades.forEach(g => {
+      div.innerHTML += `<i style="background:${getColor(g)}"></i> ${g}<br>`;
+    });
+    return div;
+  };
+  legend.addTo(map);
+
+
+  const logo = L.control({ position: 'bottomright' });
+  logo.onAdd = function () {
+    const div = L.DomUtil.create('div', 'logo-container');
+    div.innerHTML = `<img src="ACA_LOGO_CMYK.png" alt="Logo">`; 
+    return div;
+  };
+  logo.addTo(map);
+
+  
+  // Auto-refresh every 60 minutes
+  setInterval(() => location.reload(), 60 * 60 * 1000);
+</script>
+
+<script>
+
+  window.dataReady.then(() => {
+  fetchAllStationData().then(allStations => {
+      allStations.forEach(({ stationName, lat, lon, html, aqhi }) => {
+        const fillColor = getColor(String(aqhi || "NA"));
+        const marker = L.circleMarker([lat, lon], {
+          radius: 7,
+          fillColor: fillColor,
+          color: "#222",
+          weight: 1,
+          fillOpacity: 0.85
+        }).bindPopup(html);
+        marker.addTo(markerGroup);
+      });
+      markerGroup.addTo(map);
+  });
+});
+</script>
+  
+</body>
+</html>
