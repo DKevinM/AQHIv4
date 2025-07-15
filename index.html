@@ -36,7 +36,7 @@
 <script src="data.js"></script> 
    
 <script>
-  const map = L.map('map').setView([53.62, -113.09], 10);
+  const map = L.map('map').setView([50.053, -111.030], 12);
   let layerControl;
 
   // Base layers
@@ -99,7 +99,7 @@
         });
         overlayLayers[label] = layer;
         if (label === "PAS AQHI") {
-          layer.addTo(map);  // Only Strathcona County shows initially
+          layer.addTo(map); 
         }
       })
   )).then(() => {
@@ -163,7 +163,8 @@
   window.dataReady.then(() => {
   fetchAllStationData().then(allStations => {
       allStations.forEach(({ stationName, lat, lon, html, aqhi }) => {
-        const fillColor = getColor(String(aqhi || "NA"));
+        let displayAQHI = (parseFloat(aqhi) > 10) ? "10+" : aqhi;
+        const fillColor = getColor(String(displayAQHI || "NA"));
         const marker = L.circleMarker([lat, lon], {
           radius: 7,
           fillColor: fillColor,
