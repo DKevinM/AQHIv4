@@ -127,17 +127,12 @@ const shortformOverride = {
       : "Invalid Date";
 
     const lines = orderedParams
-      .filter(p => paramLookup[p])
+      .filter(p => paramLookup[p] && p !== "AQHI") 
       .map(p => {
         const r = paramLookup[p];
         const label = shortformOverride[p] || r.Shortform || p;
         let value = r.Value; 
         const unit = r.Units || "";
-
-        if (p === "AQHI" && !isNaN(value)) {
-          value = (parseFloat(value) > 10) ? "10+" : value;
-        }
-        
         return `${label}: ${value}${unit}`;
       });
 
