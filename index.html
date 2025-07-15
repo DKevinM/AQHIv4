@@ -151,15 +151,12 @@
   };
   legend.addTo(map);
 
-  };
-
   
   // Auto-refresh every 60 minutes
   setInterval(() => location.reload(), 60 * 60 * 1000);
 </script>
 
 <script>
-
   window.dataReady.then(() => {
   fetchAllStationData().then(allStations => {
       allStations.forEach(({ stationName, lat, lon, html, aqhi }) => {
