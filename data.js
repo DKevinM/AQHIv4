@@ -59,15 +59,15 @@ window.dataReady = fetch('https://raw.githubusercontent.com/DKevinM/AB_datapull/
       if (isNaN(v)) return;
       e.Value = v;
 
-      const utc = new Date(e.ReadingDate);
-      e.DisplayDate = utc.toLocaleString("en-CA", {
+      
+      const original = e.ReadingDate; // e.g. "2025-07-15T14:00:00-06:00"
+      const dt = new Date(original);
+      
+      e.DisplayDate = dt.toLocaleString("en-CA", {
         timeZone: "America/Edmonton",
         hour12: true
       });
-      
-      // Keep original ReadingDate as valid ISO string or Date object
-      e.ReadingDate = utc.toISOString();
-
+      e.ReadingDate = new Date(original).toISOString();
 
       raw[e.StationName] = raw[e.StationName]||[];
       raw[e.StationName].push(e);
