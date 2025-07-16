@@ -96,11 +96,11 @@
     .then(data => {
       data.forEach(sensor => {
         const marker = L.circleMarker([sensor.latitude, sensor.longitude], {
-          radius: 6,
-          color: sensor.color,
+          radius: 5,
+          color: "#000000",
           fillColor: sensor.color,
-          fillOpacity: 0.8,
-          weight: 1
+          fillOpacity: 0.85,
+          weight: 2
         }).bindPopup(`
           <strong>${sensor.name}</strong><br>
           PM2.5 (Corrected): ${sensor.pm_corr?.toFixed(1) ?? 'N/A'} µg/m³<br>
@@ -192,10 +192,10 @@
         let displayAQHI = (parseFloat(aqhi) > 10) ? "10+" : aqhi;
         const fillColor = getColor(String(displayAQHI || "NA"));
         const marker = L.circleMarker([lat, lon], {
-          radius: 7,
+          radius: 9,
           fillColor: fillColor,
-          color: "#222",
-          weight: 1,
+          color: "#000000",
+          weight: 2,
           fillOpacity: 0.85
         }).bindPopup(html);
         marker.addTo(markerGroup);
