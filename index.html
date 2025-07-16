@@ -100,7 +100,7 @@
           color: "#000000",
           fillColor: sensor.color,
           fillOpacity: 0.85,
-          weight: 2
+          weight: 1
         }).bindPopup(`
           <strong>${sensor.name}</strong><br>
           PM2.5 (Corrected): ${sensor.pm_corr?.toFixed(1) ?? 'N/A'} µg/m³<br>
@@ -195,7 +195,7 @@
           radius: 9,
           fillColor: fillColor,
           color: "#000000",
-          weight: 2,
+          weight: 1,
           fillOpacity: 0.85
         }).bindPopup(html);
         marker.addTo(markerGroup);
